@@ -3,19 +3,9 @@
 ; Apple wireless headset → Cursor Agent media keys (Cursor foreground only).
 ; Outside Cursor, media keys pass through to the OS (#HotIf).
 ;
-; Play/Pause short click = toggle Cursor voice (hold-to-talk breaks Apple mic
-; on Windows while the button is held). Long press = send message instead.
+; Play/Pause click = toggle Cursor voice only (no long-press mapping).
 
-; --- Thresholds / mode ---
-LongPressMs := 400
-; "toggle" = Ctrl+Shift+Space (Cursor Voice Mode)
-; "ptt"    = Ctrl+M (Agents Window only; not used for short-click toggle)
-VoiceMode := "toggle"
 ShowTips := true
-
-; State: idle | pressed
-state := "idle"
-downTick := 0
 
 Tip(msg) {
     global ShowTips
@@ -33,29 +23,24 @@ IsCursorFront() {
     }
 }
 
+ReleaseModifiers() {
+    SendInput("{Ctrl up}{Shift up}{Alt up}")
+}
+
 ToggleVoice() {
-    global VoiceMode
-    if (VoiceMode = "ptt") {
-        ; No true toggle for PTT; fall back to Voice Mode shortcut.
-        SendInput("^+{Space}")
-    } else {
-        SendInput("^+{Space}")
-    }
+    ; Refocus Cursor, send Trigger Voice Mode, then clear stuck modifiers
+    ; so the shortcut keeps working on the next click.
+    try WinActivate("ahk_exe Cursor.exe")
+    Sleep(40)
+    ReleaseModifiers()
+    SendInput("{Ctrl down}{Shift down}{Space}{Shift up}{Ctrl up}")
+    Sleep(40)
+    ReleaseModifiers()
     Tip("语音 开/关")
 }
 
-; Held past LongPressMs → send (do not also toggle voice on release).
-LongPressTimer() {
-    global state
-    if (state = "pressed") {
-        state := "idle"
-        SendInput("{Enter}")
-        Tip("发送")
-    }
-}
-
-A_IconTip := "Cursor Headset — click=voice  long-press=send"
-TrayTip("Cursor 耳机映射已启动", "短按播放=语音开关`n长按播放=发送`n音量+=接受  音量-=停止", "Iconi")
+A_IconTip := "Cursor Headset — click Play=voice  Vol+/-=accept/stop"
+TrayTip("Cursor 耳机映射已启动", "短按播放=语音开关`n音量+=接受  音量-=停止`n（无长按映射）", "Iconi")
 
 #HotIf IsCursorFront()
 
@@ -69,28 +54,13 @@ $Volume_Down:: {
     Tip("停止生成")
 }
 
+; Click Play/Pause → toggle voice only (ignore hold duration).
 $*Media_Play_Pause:: {
-    global state, downTick, LongPressMs
-
-    downTick := A_TickCount
-    state := "pressed"
-    SetTimer(LongPressTimer, -LongPressMs)
+    ; Swallow key-down; act on key-up to avoid repeat fire while held.
 }
 
 $*Media_Play_Pause Up:: {
-    global state
-
-    SetTimer(LongPressTimer, 0)
-
-    if (state = "pressed") {
-        ; Short click → toggle voice on/off (release before long-press threshold).
-        state := "idle"
-        ToggleVoice()
-        return
-    }
-
-    ; Long press already sent Enter in LongPressTimer; ignore release.
-    state := "idle"
+    ToggleVoice()
 }
 
 #HotIf

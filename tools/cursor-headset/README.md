@@ -6,19 +6,14 @@
 
 | 耳机手势 | Cursor 动作 | 发送按键（Windows） |
 |---------|------------|-------------------|
-| **短按** 播放/暂停 | **开/关 Cursor 语音** | `Ctrl+Shift+Space` |
-| **长按** 播放/暂停 | 发送给 Agent | `Enter` |
+| 播放/暂停（单击） | 开/关 Cursor 语音 | `Ctrl+Shift+Space` |
 | 音量加 | 接受全部更改 | `Ctrl+Enter` |
 | 音量减 | 停止生成 | `Ctrl+Shift+Backspace` |
 
-按住播放键时苹果耳机麦在 Windows 上经常不收音，因此改为**单击切换录音**，不再用按住说话。
-
-**已移除「双击 → 停止」**：停止请用 **音量减**。
+**无长按映射**（长按播放不会发送）。发送请用键盘 `Enter`。停止用 **音量减**。
 
 脚本顶部常量：
 
-- `LongPressMs := 400` — 超过此时长算长按「发送」，否则算短按「语音开关」
-- `VoiceMode := "toggle"` — 语音用 `Ctrl+Shift+Space`
 - `ShowTips := true` — 映射触发时短暂提示
 
 **若音量加减突然全失效：** 检查是否还开着旧版 `probe-keys.ahk`（无 `~` 的版本会**全局吞键**）。托盘退出所有 AutoHotkey 脚本后，只运行 `cursor-headset.ahk`。新版探针已改为穿透监听，不再抢键。
