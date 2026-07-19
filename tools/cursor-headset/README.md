@@ -7,17 +7,29 @@
 | 耳机手势 | Cursor 动作 | 发送按键（Windows） |
 |---------|------------|-------------------|
 | 短按 播放/暂停 | 发送给 Agent | `Enter`（立即发送，无等待） |
-| 长按 播放/暂停（按住） | 开始语音 | 优先 `Ctrl+M` 按下（Agents 窗口 PTT）；备选 `Ctrl+Shift+Space` 切换 |
-| 长按后松开 | 结束语音 | `Ctrl+M` 抬起；或再发一次 `Ctrl+Shift+Space` |
+| 长按 播放/暂停（按住/松开） | 开始/结束语音（**默认关闭**） | 见下方 `EnableVoice` |
 | 音量加 | 接受全部更改 | `Ctrl+Enter` |
 | 音量减 | 停止生成 | `Ctrl+Shift+Backspace` |
 
-**已移除「双击播放/暂停 → 停止」**：多数苹果耳机在 Windows 上不会把双击拆成两次 `Media_Play_Pause`（探针验证双击失效）。停止生成请用 **音量减**。
+**已移除「双击播放/暂停 → 停止」**：多数苹果耳机在 Windows 上不会把双击拆成两次 `Media_Play_Pause`。停止请用 **音量减**。
 
 脚本顶部常量：
 
 - `LongPressMs := 400` — 长按阈值
-- `VoiceMode := "ptt"` — `"ptt"` 用 Ctrl+M 按住；若无效可改为 `"toggle"`
+- `EnableVoice := false` — **默认关闭**长按语音。打开 Cursor 语音常会把蓝牙切到「Hands-Free」通话档，导致苹果耳机麦克风失效；线控映射本身不碰麦克风
+- `VoiceMode := "ptt"` — 仅当 `EnableVoice := true` 时生效；`"ptt"` = Ctrl+M 按住，`"toggle"` = Ctrl+Shift+Space
+
+### 麦克风失效时（Windows + 苹果耳机）
+
+线控正常但没声音进 Cursor，几乎都是蓝牙音频配置问题，不是 AHK 映射坏了：
+
+1. 先确认脚本里 `EnableVoice := false`，退出旧脚本后重新运行 `cursor-headset.ahk`（避免误触语音）。
+2. 设置 → 系统 → 声音 → **输入**：选带 **Hands-Free AG Audio / 免提** 字样的耳机麦；不要选只有 Stereo 的输出设备当输入（Stereo 没有麦克风通道）。
+3. 经典声音面板（`mmsys.cpl`）→ 录制：把 Hands-Free 设为默认设备/默认通讯设备。
+4. Cursor 语音/系统隐私里允许麦克风；输入设备也选 Hands-Free。
+5. 仍不行：蓝牙里移除耳机 → 耳机入盒长按复位 → 重新配对。
+
+麦克风稳定后，若仍要用长按语音：把 `EnableVoice := true` 保存并重启脚本。
 
 作用域：`#HotIf WinActive("ahk_exe Cursor.exe")`。
 
