@@ -1,16 +1,12 @@
 #Requires AutoHotkey v2.0
 #SingleInstance Force
-; Simple Cursor headset map (only while Cursor.exe is foreground):
-;   Vol+ short  → Accept changes
-;   Vol+ hold   → Voice (start after hold, stop on release)
-;   Play/Pause  → Send
+; Cursor foreground only:
+;   Vol+ hold   → Voice (down=start, up=stop)
+;   Play/Pause  → Ctrl+Enter (send)
 ;   Vol-        → Stop generation
 
-HoldMs := 400
 ShowTips := true
-
-; vol+ state: idle | pressed | voice
-volState := "idle"
+voiceOn := false
 
 Tip(msg) {
     global ShowTips
@@ -32,61 +28,51 @@ ReleaseModifiers() {
 }
 
 StartVoice() {
+    global voiceOn
+    if voiceOn
+        return
     ReleaseModifiers()
     SendEvent("{Ctrl down}{Shift down}{Space}{Shift up}{Ctrl up}")
     ReleaseModifiers()
+    voiceOn := true
     Tip("语音：开")
 }
 
 StopVoice() {
+    global voiceOn
+    if !voiceOn
+        return
     ReleaseModifiers()
     SendEvent("{Ctrl down}{Shift down}{Space}{Shift up}{Ctrl up}")
     ReleaseModifiers()
+    voiceOn := false
     Tip("语音：关")
 }
 
-VolHoldTimer() {
-    global volState
-    if (volState = "pressed") {
-        volState := "voice"
-        StartVoice()
-    }
-}
-
-A_IconTip := "Cursor Headset: Vol+ accept/voice | Play send | Vol- stop"
-TrayTip("Cursor 耳机映射", "音量+短按=接受  按住=语音`n播放=发送  音量-=停止", "Iconi")
+A_IconTip := "Cursor Headset: Vol+=voice | Play=Ctrl+Enter | Vol-=stop"
+TrayTip("Cursor 耳机映射", "音量+=语音(按住)`n播放=Ctrl+Enter发送`n音量-=停止", "Iconi")
 
 #HotIf IsCursorFront()
 
-; --- Volume Up: short=accept, hold=voice ---
+; Volume Up: voice only (press=start, release=stop)
 $*Volume_Up:: {
-    global volState, HoldMs
-    volState := "pressed"
-    SetTimer(VolHoldTimer, -HoldMs)
+    StartVoice()
 }
 
 $*Volume_Up Up:: {
-    global volState
-    SetTimer(VolHoldTimer, 0)
-    if (volState = "voice") {
-        StopVoice()
-    } else if (volState = "pressed") {
-        SendInput("^{Enter}")
-        Tip("接受更改")
-    }
-    volState := "idle"
+    StopVoice()
 }
 
-; --- Volume Down: stop ---
+; Volume Down: stop generation
 $Volume_Down:: {
     SendInput("^+{Backspace}")
     Tip("停止生成")
 }
 
-; --- Play/Pause: send ---
+; Play/Pause: Ctrl+Enter send
 $Media_Play_Pause:: {
-    SendInput("{Enter}")
-    Tip("发送")
+    SendInput("^{Enter}")
+    Tip("发送 Ctrl+Enter")
 }
 
 #HotIf
