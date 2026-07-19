@@ -1,12 +1,12 @@
 #Requires AutoHotkey v2.0
 #SingleInstance Force
 ; Cursor foreground only:
-;   Vol+ hold   → Voice (down=start, up=stop)
-;   Play/Pause  → Ctrl+Enter (send)
-;   Vol-        → Stop generation
+;   Vol+ down/up → Ctrl+M down/up (Agents Window PTT voice)
+;   Play/Pause   → Ctrl+Enter (send)
+;   Vol-         → Stop generation
 
 ShowTips := true
-voiceOn := false
+voiceHeld := false
 
 Tip(msg) {
     global ShowTips
@@ -23,38 +23,35 @@ IsCursorFront() {
         return false
 }
 
-ReleaseModifiers() {
-    SendInput("{Ctrl up}{Shift up}{Alt up}")
-}
-
 StartVoice() {
-    global voiceOn
-    if voiceOn
+    global voiceHeld
+    if voiceHeld
         return
-    ReleaseModifiers()
-    SendEvent("{Ctrl down}{Shift down}{Space}{Shift up}{Ctrl up}")
-    ReleaseModifiers()
-    voiceOn := true
-    Tip("语音：开")
+    ; Hold Ctrl+M for Agents Window push-to-talk
+    Send("{Ctrl down}{m down}")
+    voiceHeld := true
+    Tip("Ctrl+M 按下")
 }
 
 StopVoice() {
-    global voiceOn
-    if !voiceOn
+    global voiceHeld
+    if !voiceHeld
         return
-    ReleaseModifiers()
-    SendEvent("{Ctrl down}{Shift down}{Space}{Shift up}{Ctrl up}")
-    ReleaseModifiers()
-    voiceOn := false
-    Tip("语音：关")
+    Send("{m up}{Ctrl up}")
+    voiceHeld := false
+    Tip("Ctrl+M 松开")
 }
 
-A_IconTip := "Cursor Headset: Vol+=voice | Play=Ctrl+Enter | Vol-=stop"
-TrayTip("Cursor 耳机映射", "音量+=语音(按住)`n播放=Ctrl+Enter发送`n音量-=停止", "Iconi")
+OnExit((*) => (
+    Send("{m up}{Ctrl up}"),
+    voiceHeld := false
+))
+
+A_IconTip := "Cursor Headset: Vol+=Ctrl+M | Play=Ctrl+Enter | Vol-=stop"
+TrayTip("Cursor 耳机映射", "音量+=按住 Ctrl+M 语音`n播放=Ctrl+Enter发送`n音量-=停止", "Iconi")
 
 #HotIf IsCursorFront()
 
-; Volume Up: voice only (press=start, release=stop)
 $*Volume_Up:: {
     StartVoice()
 }
@@ -63,15 +60,13 @@ $*Volume_Up Up:: {
     StopVoice()
 }
 
-; Volume Down: stop generation
 $Volume_Down:: {
-    SendInput("^+{Backspace}")
+    Send("^+{Backspace}")
     Tip("停止生成")
 }
 
-; Play/Pause: Ctrl+Enter send
 $Media_Play_Pause:: {
-    SendInput("^{Enter}")
+    Send("^{Enter}")
     Tip("发送 Ctrl+Enter")
 }
 

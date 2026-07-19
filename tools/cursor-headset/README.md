@@ -6,11 +6,11 @@
 
 | 耳机 | 动作 | 按键 |
 |------|------|------|
-| 音量+（按下/松开） | 语音开 / 关 | `Ctrl+Shift+Space` |
+| 音量+（按下/松开） | 按住说话 / 松开结束 | `Ctrl+M` 按下 / 抬起（Agents 窗口 PTT） |
 | 播放/暂停 | 发送给 Agent | `Ctrl+Enter` |
 | 音量减 | 停止生成 | `Ctrl+Shift+Backspace` |
 
-音量加**只有录音**，无短按「接受」。
+音量加**只映射 Ctrl+M 按住说话**。请在 **Agents 窗口**里用（主编辑器里的 Toggle Voice Mode 不是 Ctrl+M）。
 
 ## 使用
 
