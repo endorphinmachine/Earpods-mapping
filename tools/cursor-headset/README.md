@@ -6,17 +6,33 @@
 
 | 耳机手势 | Cursor 动作 | 发送按键（Windows） |
 |---------|------------|-------------------|
-| 播放/暂停（单击） | 开/关 Cursor 语音 | `Ctrl+Shift+Space` |
+| 播放/暂停（单击） | 开/关 Cursor 语音 | `F13` → `composer.toggleVoiceDictation` |
 | 音量加 | 接受全部更改 | `Ctrl+Enter` |
 | 音量减 | 停止生成 | `Ctrl+Shift+Backspace` |
 
-**无长按映射**（长按播放不会发送）。发送请用键盘 `Enter`。停止用 **音量减**。
+**无长按映射**。发送请用键盘 `Enter`。停止用 **音量减**。
+
+### 为什么不用 Ctrl+Shift+Space？
+
+AHK 模拟 `Ctrl+Shift+Space` 时经常**只生效一次**（修饰键残留 / 蓝牙通话档后合成按键失效），但 ToolTip 仍会显示。改为发送无修饰键的 **F13**，并在 Cursor 里绑定：
+
+`F13` → `composer.toggleVoiceDictation`（Toggle Voice Mode）
+
+一键安装绑定：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\install-voice-keybinding.ps1
+```
+
+或手动：`Ctrl+K Ctrl+S` → 搜 `Toggle Voice Mode` → 设为 `F13`。
 
 脚本顶部常量：
 
-- `ShowTips := true` — 映射触发时短暂提示
+- `ShowTips := true`
+- `VoiceKey := "{F13}"` — 须与 Cursor 快捷键一致
+- `DebounceMs := 600` — 防止连按
 
-**若音量加减突然全失效：** 检查是否还开着旧版 `probe-keys.ahk`（无 `~` 的版本会**全局吞键**）。托盘退出所有 AutoHotkey 脚本后，只运行 `cursor-headset.ahk`。新版探针已改为穿透监听，不再抢键。
+**若音量加减突然全失效：** 退出旧版会吞键的 `probe-keys.ahk`，只保留 `cursor-headset.ahk`。
 
 ### 麦克风失效时（Windows + 苹果耳机）
 

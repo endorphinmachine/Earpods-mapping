@@ -8,11 +8,11 @@
 
 | 耳机操作 | Cursor 动作 | 发送按键 |
 |---------|------------|---------|
-| 播放/暂停（单击） | 开/关 Cursor 语音 | `Ctrl+Shift+Space` |
+| 播放/暂停（单击） | 开/关 Cursor 语音 | `F13`（需绑定 Toggle Voice Mode） |
 | 音量加 | 接受全部更改 | `Ctrl+Enter` |
 | 音量减 | 停止生成 | `Ctrl+Shift+Backspace` |
 
-发送给 Agent 请用键盘 `Enter`（播放键无长按映射）。
+首次使用请运行 `tools/cursor-headset/install-voice-keybinding.ps1`，或手动把 **Toggle Voice Mode** 绑到 **F13**。
 
 > 双击已弃用。麦克风问题见 [`tools/cursor-headset/README.md`](tools/cursor-headset/README.md)（Windows 需选 Hands-Free AG Audio 作为输入）。
 
