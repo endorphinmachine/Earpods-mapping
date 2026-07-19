@@ -8,11 +8,12 @@
 
 | 耳机操作 | Cursor 动作 | 发送按键 |
 |---------|------------|---------|
-| 短按 播放/暂停 | 发送给 Agent | `Enter` |
+| 短按 播放/暂停 | 发送给 Agent | `Enter`（立即发送） |
 | 长按 播放/暂停（按住 / 松开） | 开始 / 结束语音 | `Ctrl+M` 按下/抬起（PTT）；或 `Ctrl+Shift+Space` 切换 |
-| 双击 播放/暂停 | 停止生成 | `Ctrl+Shift+Backspace` |
 | 音量加 | 接受全部更改 | `Ctrl+Enter` |
 | 音量减 | 停止生成 | `Ctrl+Shift+Backspace` |
+
+> 双击播放/暂停在多数苹果耳机 + Windows 上不会产生两次 `Media_Play_Pause`，已弃用；停止请用音量减。若探针里双击显示为 `Media_Next`/`Media_Prev`，可再改绑。
 
 ## 快速使用
 
