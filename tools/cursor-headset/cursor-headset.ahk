@@ -3,23 +3,19 @@
 ; Apple wireless headset → Cursor Agent media keys (Cursor foreground only).
 ; Outside Cursor, media keys pass through to the OS (#HotIf).
 ;
-; IMPORTANT: Exit probe-keys.ahk if you used an older version without ~ —
-; that version globally swallowed Volume / Play-Pause and looked like
-; "volume mapping broken". Current probe uses passthrough.
+; Play/Pause short click = toggle Cursor voice (hold-to-talk breaks Apple mic
+; on Windows while the button is held). Long press = send message instead.
 
 ; --- Thresholds / mode ---
 LongPressMs := 400
-EnableVoice := true
-; "toggle" = Ctrl+Shift+Space (Cursor Voice Mode, recommended)
-; "ptt"    = Ctrl+M hold (Agents Window push-to-talk only)
+; "toggle" = Ctrl+Shift+Space (Cursor Voice Mode)
+; "ptt"    = Ctrl+M (Agents Window only; not used for short-click toggle)
 VoiceMode := "toggle"
-; Brief on-screen confirm when a mapping fires (set false once stable)
 ShowTips := true
 
-; State: idle | pressed | voice
+; State: idle | pressed
 state := "idle"
 downTick := 0
-voiceHeld := false
 
 Tip(msg) {
     global ShowTips
@@ -37,55 +33,29 @@ IsCursorFront() {
     }
 }
 
-ReleaseModifiers() {
-    global voiceHeld, VoiceMode
-    if (voiceHeld && VoiceMode = "ptt")
-        SendInput("{m up}{Ctrl up}")
-    voiceHeld := false
-    SendInput("{Ctrl up}{Shift up}{Alt up}")
-}
-
-StartVoice() {
-    global VoiceMode, voiceHeld, EnableVoice
-    if (!EnableVoice)
-        return
+ToggleVoice() {
+    global VoiceMode
     if (VoiceMode = "ptt") {
-        SendInput("{Ctrl down}{m down}")
-        voiceHeld := true
+        ; No true toggle for PTT; fall back to Voice Mode shortcut.
+        SendInput("^+{Space}")
     } else {
-        ; Toggle Voice Mode on
-        SendInput("^+{Space}")
-        voiceHeld := true
-    }
-    Tip("语音：开")
-}
-
-EndVoice() {
-    global VoiceMode, voiceHeld, EnableVoice
-    if (!EnableVoice)
-        return
-    if (VoiceMode = "ptt") {
-        SendInput("{m up}{Ctrl up}")
-    } else if (voiceHeld) {
-        ; Toggle Voice Mode off
         SendInput("^+{Space}")
     }
-    voiceHeld := false
-    Tip("语音：关")
+    Tip("语音 开/关")
 }
 
+; Held past LongPressMs → send (do not also toggle voice on release).
 LongPressTimer() {
-    global state, EnableVoice
-    if (state = "pressed" && EnableVoice) {
-        state := "voice"
-        StartVoice()
+    global state
+    if (state = "pressed") {
+        state := "idle"
+        SendInput("{Enter}")
+        Tip("发送")
     }
 }
 
-OnExit((*) => ReleaseModifiers())
-
-A_IconTip := "Cursor Headset — Voice=" (EnableVoice ? VoiceMode : "off")
-TrayTip("Cursor 耳机映射已启动", "语音=" (EnableVoice ? VoiceMode : "关") "`n音量+=接受  音量-=停止  短按播放=发送", "Iconi")
+A_IconTip := "Cursor Headset — click=voice  long-press=send"
+TrayTip("Cursor 耳机映射已启动", "短按播放=语音开关`n长按播放=发送`n音量+=接受  音量-=停止", "Iconi")
 
 #HotIf IsCursorFront()
 
@@ -100,12 +70,11 @@ $Volume_Down:: {
 }
 
 $*Media_Play_Pause:: {
-    global state, downTick, LongPressMs, EnableVoice
+    global state, downTick, LongPressMs
 
     downTick := A_TickCount
     state := "pressed"
-    if (EnableVoice)
-        SetTimer(LongPressTimer, -LongPressMs)
+    SetTimer(LongPressTimer, -LongPressMs)
 }
 
 $*Media_Play_Pause Up:: {
@@ -113,19 +82,14 @@ $*Media_Play_Pause Up:: {
 
     SetTimer(LongPressTimer, 0)
 
-    if (state = "voice") {
-        EndVoice()
-        state := "idle"
-        return
-    }
-
     if (state = "pressed") {
+        ; Short click → toggle voice on/off (release before long-press threshold).
         state := "idle"
-        SendInput("{Enter}")
-        Tip("发送")
+        ToggleVoice()
         return
     }
 
+    ; Long press already sent Enter in LongPressTimer; ignore release.
     state := "idle"
 }
 

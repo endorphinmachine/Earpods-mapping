@@ -8,8 +8,8 @@
 
 | 耳机操作 | Cursor 动作 | 发送按键 |
 |---------|------------|---------|
-| 短按 播放/暂停 | 发送给 Agent | `Enter`（立即发送） |
-| 长按 播放/暂停（按住/松开） | 开/关 Cursor 语音 | `Ctrl+Shift+Space`（`VoiceMode := "toggle"`） |
+| 短按 播放/暂停 | 开/关 Cursor 语音 | `Ctrl+Shift+Space` |
+| 长按 播放/暂停 | 发送给 Agent | `Enter` |
 | 音量加 | 接受全部更改 | `Ctrl+Enter` |
 | 音量减 | 停止生成 | `Ctrl+Shift+Backspace` |
 
