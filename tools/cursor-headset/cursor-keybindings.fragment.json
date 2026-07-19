@@ -1,0 +1,6 @@
+[
+  {
+    "key": "f13",
+    "command": "composer.toggleVoiceDictation"
+  }
+]

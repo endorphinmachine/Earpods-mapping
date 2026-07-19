@@ -1,98 +1,104 @@
 #Requires AutoHotkey v2.0
 #SingleInstance Force
-; Apple wireless headset → Cursor Agent media keys (Cursor foreground only).
-; Outside Cursor, media keys pass through to the OS (#HotIf).
+; Cursor foreground only:
+;   Vol+ down/up     → Ctrl+M down/up (Agents Window PTT voice)
+;   Play/Pause       → Ctrl+Enter (send)
+;   Vol- short       → Stop generation
+;   Vol- long        → Clear chat input (Ctrl+A, Delete)
 
-; --- Thresholds / mode ---
-LongPressMs := 400
-DoubleClickMs := 300
-; "ptt" = Ctrl+M hold (Agents Window PTT); "toggle" = Ctrl+Shift+Space on press & release
-VoiceMode := "ptt"
+HoldMs := 400
+ShowTips := true
+voiceHeld := false
+; vol- state: idle | pressed | cleared
+volDownState := "idle"
 
-; State: idle | pressed | voice | shortWait | pressed2
-state := "idle"
-downTick := 0
+Tip(msg) {
+    global ShowTips
+    if !ShowTips
+        return
+    ToolTip(msg)
+    SetTimer(() => ToolTip(), -800)
+}
+
+IsCursorFront() {
+    try
+        return WinGetProcessName("A") = "Cursor.exe"
+    catch
+        return false
+}
 
 StartVoice() {
-    global VoiceMode
-    if (VoiceMode = "ptt")
-        Send("{Ctrl down}{m down}")
-    else
-        Send("^+{Space}")
-}
-
-EndVoice() {
-    global VoiceMode
-    if (VoiceMode = "ptt")
-        Send("{m up}{Ctrl up}")
-    else
-        Send("^+{Space}")
-}
-
-; Held past LongPressMs → start voice (no Enter on later release).
-LongPressTimer() {
-    global state
-    if (state = "pressed") {
-        state := "voice"
-        StartVoice()
-    }
-}
-
-; No second click within DoubleClickMs → confirmed short press → Enter.
-DoubleClickTimer() {
-    global state
-    if (state = "shortWait") {
-        state := "idle"
-        Send("{Enter}")
-    }
-}
-
-#HotIf WinActive("ahk_exe Cursor.exe")
-
-Volume_Up::Send("^{Enter}")          ; Accept all changes
-Volume_Down::Send("^+{Backspace}")   ; Stop generation
-
-; Play/Pause: gesture state machine (short / long / double).
-$*Media_Play_Pause:: {
-    global state, downTick, LongPressMs
-
-    downTick := A_TickCount
-
-    if (state = "shortWait") {
-        ; Second press inside double-click window → cancel pending Enter.
-        SetTimer(DoubleClickTimer, 0)
-        state := "pressed2"
+    global voiceHeld
+    if voiceHeld
         return
-    }
-
-    state := "pressed"
-    SetTimer(LongPressTimer, -LongPressMs)
+    Send("{Ctrl down}{m down}")
+    voiceHeld := true
+    Tip("Ctrl+M 按下")
 }
 
-$*Media_Play_Pause Up:: {
-    global state, DoubleClickMs
-
-    SetTimer(LongPressTimer, 0)
-
-    if (state = "voice") {
-        ; Release after long-press: end voice only (never also Enter).
-        EndVoice()
-        state := "idle"
+StopVoice() {
+    global voiceHeld
+    if !voiceHeld
         return
-    }
+    Send("{m up}{Ctrl up}")
+    voiceHeld := false
+    Tip("Ctrl+M 松开")
+}
 
-    if (state = "pressed2") {
-        state := "idle"
-        Send("^+{Backspace}")  ; Double-click → stop generation
-        return
-    }
+ClearChatInput() {
+    ; Select all in focused input, then delete
+    Send("^a")
+    Sleep(30)
+    Send("{Delete}")
+    Tip("清空输入")
+}
 
-    if (state = "pressed") {
-        ; Short press: wait for possible double-click before Enter.
-        state := "shortWait"
-        SetTimer(DoubleClickTimer, -DoubleClickMs)
-        return
+VolDownHoldTimer() {
+    global volDownState
+    if (volDownState = "pressed") {
+        volDownState := "cleared"
+        ClearChatInput()
     }
+}
+
+OnExit((*) => (
+    Send("{m up}{Ctrl up}"),
+    voiceHeld := false
+))
+
+A_IconTip := "Cursor Headset: Vol+=Ctrl+M | Play=send | Vol-=stop/clear"
+TrayTip("Cursor 耳机映射", "音量+=Ctrl+M语音`n播放=Ctrl+Enter发送`n音量-短按=停止 长按=清空输入", "Iconi")
+
+#HotIf IsCursorFront()
+
+$*Volume_Up:: {
+    StartVoice()
+}
+
+$*Volume_Up Up:: {
+    StopVoice()
+}
+
+$*Volume_Down:: {
+    global volDownState, HoldMs
+    volDownState := "pressed"
+    SetTimer(VolDownHoldTimer, -HoldMs)
+}
+
+$*Volume_Down Up:: {
+    global volDownState
+    SetTimer(VolDownHoldTimer, 0)
+    if (volDownState = "pressed") {
+        Send("^+{Backspace}")
+        Tip("停止生成")
+    }
+    ; if cleared, long-press already handled — do not also stop
+    volDownState := "idle"
+}
+
+$Media_Play_Pause:: {
+    Send("^{Enter}")
+    Tip("发送 Ctrl+Enter")
 }
 
 #HotIf

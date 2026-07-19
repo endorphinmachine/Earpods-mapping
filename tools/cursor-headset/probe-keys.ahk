@@ -1,7 +1,8 @@
 #Requires AutoHotkey v2.0
 #SingleInstance Force
 ; Probe: log whether Apple headset media keys reach Windows.
-; Run this (Cursor does not need to be focused). Check ToolTip + probe-keys.log.
+; Uses ~ (passthrough) so keys are NOT swallowed — safe to run alongside
+; cursor-headset.ahk, or alone. Prefer exiting probe when done testing.
 
 LogPath := A_ScriptDir "\probe-keys.log"
 
@@ -15,24 +16,24 @@ Log(msg) {
 
 downTick := 0
 
-Log("probe-keys started — press Volume Up/Down and Play/Pause on the headset")
+Log("probe-keys started (passthrough) — Volume / Play-Pause / double-tap / long-press")
 
-Volume_Up:: {
-    Log("Volume_Up")
-}
+; ~ = pass through to OS and other scripts (do not block).
+~Volume_Up::Log("Volume_Up")
+~Volume_Down::Log("Volume_Down")
 
-Volume_Down:: {
-    Log("Volume_Down")
-}
-
-*Media_Play_Pause:: {
+~*Media_Play_Pause:: {
     global downTick
     downTick := A_TickCount
     Log("Media_Play_Pause Down")
 }
 
-*Media_Play_Pause Up:: {
+~*Media_Play_Pause Up:: {
     global downTick
     held := A_TickCount - downTick
     Log("Media_Play_Pause Up  hold=" held "ms")
 }
+
+~Media_Next::Log("Media_Next (often = double-tap forward)")
+~Media_Prev::Log("Media_Prev (often = double-tap back / triple-tap)")
+~Media_Stop::Log("Media_Stop")
