@@ -9,3 +9,4 @@ Desktop.ini
 *.exe
 *.bak
 *.tmp
+**/probe-keys.log
