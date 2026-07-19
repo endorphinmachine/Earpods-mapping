@@ -1,12 +1,16 @@
 #Requires AutoHotkey v2.0
 #SingleInstance Force
 ; Cursor foreground only:
-;   Vol+ down/up → Ctrl+M down/up (Agents Window PTT voice)
-;   Play/Pause   → Ctrl+Enter (send)
-;   Vol-         → Stop generation
+;   Vol+ down/up     → Ctrl+M down/up (Agents Window PTT voice)
+;   Play/Pause       → Ctrl+Enter (send)
+;   Vol- short       → Stop generation
+;   Vol- long        → Clear chat input (Ctrl+A, Delete)
 
+HoldMs := 400
 ShowTips := true
 voiceHeld := false
+; vol- state: idle | pressed | cleared
+volDownState := "idle"
 
 Tip(msg) {
     global ShowTips
@@ -27,7 +31,6 @@ StartVoice() {
     global voiceHeld
     if voiceHeld
         return
-    ; Hold Ctrl+M for Agents Window push-to-talk
     Send("{Ctrl down}{m down}")
     voiceHeld := true
     Tip("Ctrl+M 按下")
@@ -42,13 +45,29 @@ StopVoice() {
     Tip("Ctrl+M 松开")
 }
 
+ClearChatInput() {
+    ; Select all in focused input, then delete
+    Send("^a")
+    Sleep(30)
+    Send("{Delete}")
+    Tip("清空输入")
+}
+
+VolDownHoldTimer() {
+    global volDownState
+    if (volDownState = "pressed") {
+        volDownState := "cleared"
+        ClearChatInput()
+    }
+}
+
 OnExit((*) => (
     Send("{m up}{Ctrl up}"),
     voiceHeld := false
 ))
 
-A_IconTip := "Cursor Headset: Vol+=Ctrl+M | Play=Ctrl+Enter | Vol-=stop"
-TrayTip("Cursor 耳机映射", "音量+=按住 Ctrl+M 语音`n播放=Ctrl+Enter发送`n音量-=停止", "Iconi")
+A_IconTip := "Cursor Headset: Vol+=Ctrl+M | Play=send | Vol-=stop/clear"
+TrayTip("Cursor 耳机映射", "音量+=Ctrl+M语音`n播放=Ctrl+Enter发送`n音量-短按=停止 长按=清空输入", "Iconi")
 
 #HotIf IsCursorFront()
 
@@ -60,9 +79,21 @@ $*Volume_Up Up:: {
     StopVoice()
 }
 
-$Volume_Down:: {
-    Send("^+{Backspace}")
-    Tip("停止生成")
+$*Volume_Down:: {
+    global volDownState, HoldMs
+    volDownState := "pressed"
+    SetTimer(VolDownHoldTimer, -HoldMs)
+}
+
+$*Volume_Down Up:: {
+    global volDownState
+    SetTimer(VolDownHoldTimer, 0)
+    if (volDownState = "pressed") {
+        Send("^+{Backspace}")
+        Tip("停止生成")
+    }
+    ; if cleared, long-press already handled — do not also stop
+    volDownState := "idle"
 }
 
 $Media_Play_Pause:: {

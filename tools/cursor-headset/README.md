@@ -8,9 +8,10 @@
 |------|------|------|
 | 音量+（按下/松开） | 按住说话 / 松开结束 | `Ctrl+M` 按下 / 抬起（Agents 窗口 PTT） |
 | 播放/暂停 | 发送给 Agent | `Ctrl+Enter` |
-| 音量减 | 停止生成 | `Ctrl+Shift+Backspace` |
+| 音量减 **短按** | 停止生成 | `Ctrl+Shift+Backspace` |
+| 音量减 **长按** | 清空对话框输入 | `Ctrl+A` → `Delete` |
 
-音量加**只映射 Ctrl+M 按住说话**。请在 **Agents 窗口**里用（主编辑器里的 Toggle Voice Mode 不是 Ctrl+M）。
+音量加只映射 Ctrl+M。长按阈值 `HoldMs := 400`。请在 **Agents 窗口**使用语音。
 
 ## 使用
 
