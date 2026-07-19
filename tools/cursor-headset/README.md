@@ -16,8 +16,11 @@
 脚本顶部常量：
 
 - `LongPressMs := 400` — 长按阈值
-- `EnableVoice := false` — **默认关闭**长按语音。打开 Cursor 语音常会把蓝牙切到「Hands-Free」通话档，导致苹果耳机麦克风失效；线控映射本身不碰麦克风
-- `VoiceMode := "ptt"` — 仅当 `EnableVoice := true` 时生效；`"ptt"` = Ctrl+M 按住，`"toggle"` = Ctrl+Shift+Space
+- `EnableVoice := true` — 长按播放键开/关 Cursor 语音；若麦克风又被蓝牙通话档搞挂，改回 `false`
+- `VoiceMode := "toggle"` — `"toggle"` = `Ctrl+Shift+Space`（Cursor 主界面语音，推荐）；`"ptt"` = `Ctrl+M`（仅 Agents 窗口按住说话）
+- `ShowTips := true` — 映射触发时右下角短暂提示，确认键位是否生效
+
+**若音量加减突然全失效：** 检查是否还开着旧版 `probe-keys.ahk`（无 `~` 的版本会**全局吞键**）。托盘退出所有 AutoHotkey 脚本后，只运行 `cursor-headset.ahk`。新版探针已改为穿透监听，不再抢键。
 
 ### 麦克风失效时（Windows + 苹果耳机）
 
